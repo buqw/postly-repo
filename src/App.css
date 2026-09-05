@@ -1,5 +1,6 @@
-#body{
-  background-color: rgba(210, 229, 246, 0.687);
+#root{
+  background-color: rgb(217, 240, 240);
+  min-height: 100vh;
 }
 
 #navi{
@@ -15,4 +16,11 @@
 
 .pointer-cursor{
   cursor: pointer;
+}
+
+.HomeLoadingDiv{
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
