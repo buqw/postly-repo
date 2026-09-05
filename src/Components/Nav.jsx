@@ -2,8 +2,6 @@ import { useState } from "react"
 import axios from "axios"
 
 export default function Nav(props){
-    const [error,setError] = useState("")
-
     const [regUsername,setRegUsername] = useState("")
     const RUNChange = (e)=>{
         setRegUsername(e.target.value);
@@ -24,8 +22,42 @@ export default function Nav(props){
         setEmail(e.target.value)
     }
 
-    const handleRegister = (e)=>{
+    const handleRegisterClose = (e)=>{
         e.preventDefault()
+        setRegUsername("");
+        setRegPass("")
+        setName("")
+        setEmail("")
+    }
+
+    const handleLoginClose = (e)=>{
+        e.preventDefault()
+        setUsername("")
+        setPassword("")
+    }
+
+    const handleRegister = async (e)=>{
+        e.preventDefault()
+        console.log(regUsername,regPass,name,email)
+        if(regUsername && regPass && name && email){
+            try{
+                const response = await axios.post("https://tarmeezacademy.com/api/v1/register",{
+                    username:regUsername,
+                    password:regPass,
+                    name:name,
+                    email:email        
+                })
+                props.setLoggedIn(true)
+                props.setToken(response.data.token)
+                localStorage.setItem("token",response.data.token)
+                localStorage.setItem("user",JSON.stringify(response.user))
+                setShowAlert(true)
+                setAlertType("Registered")
+
+            }catch(err){
+                console.log(err.response?.data)
+            }
+        }
     }
 
     const [username,setUsername] = useState("");
@@ -39,7 +71,6 @@ export default function Nav(props){
     }
 
 
-
     const handleLogin = async (e)=>{
         e.preventDefault()
         if(username && password){
@@ -49,16 +80,33 @@ export default function Nav(props){
                     {
                         "username": username,
                         "password":password
-                    }
+                    },
                 )
-                console.log(response.data)
+                localStorage.setItem("token",response.data.token)
+                props.setToken(response.data.token)
+                props.setLoggedIn(true)
+                localStorage.setItem("user",JSON.stringify(response.data.user))
+                setShowAlert(true)
+                setAlertType("Logged in")
             }catch(err){
-                setError(`Error while login: ${err}`)
                 console.log(err.response?.status)
                 console.log(err.response?.data?.message)
             }
         }
     }
+
+    const handleLogoutBtn = (e)=>{
+        e.preventDefault();
+        props.setLoggedIn(false)
+        props.setToken("")
+        localStorage.setItem("token","")
+        localStorage.setItem("user","")
+        setShowAlert(true)
+        setAlertType("Logged out")
+    }
+
+    const [showAlert,setShowAlert] = useState(false);
+    const [alertType,setAlertType] = useState("")
 
     return(
         <nav id="navi" className="navbar navbar-expand-lg bg-body-tertiary">
@@ -77,12 +125,28 @@ export default function Nav(props){
                     </li>
                 </ul>
                 <div className="d-flex w-100 justify-content-end">
-                    <button type="button" className="btn btn-outline-success mx-2" data-bs-toggle="modal" data-bs-target="#loginModal">Login</button>
-                    <button type="button" className="btn btn-outline-success" data-bs-toggle="modal" data-bs-target="#registerModal">Register</button>
+
+                    {props.loggedIn ? (
+                        <button onClick={handleLogoutBtn} type="button" className="btn btn-outline-danger mx-2">Logout</button>
+                    )
+                    :
+                    (
+                        <>
+                            <button type="button" className="btn btn-outline-success mx-2" data-bs-toggle="modal" data-bs-target="#loginModal">Login</button>
+                            <button type="button" className="btn btn-outline-success" data-bs-toggle="modal" data-bs-target="#registerModal">Register</button>                        
+                        </>
+                    )}
+
                 </div>
                 </div>
             </div>
 
+        {showAlert &&
+            (<div id="alertSucc" className={alertType == "Logged out" ? "alert-danger alert alert-dismissible" :"alert-success alert alert-dismissible"} role="alert" >
+                <div>{alertType} Successfully</div>
+                <button type="button" className="btn-close" aria-label="Close" onClick={() => setShowAlert(false)} >
+                </button>
+            </div>)}                    
 
             <div className="modal fade" id="loginModal" tabIndex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
                 <div className="modal-dialog">
@@ -95,17 +159,17 @@ export default function Nav(props){
                         <form>
                         <div className="mb-3">
                             <label htmlFor="recipient-name" className="col-form-label">Username</label>
-                            <input onChange={usenameLoginChange} type="text" className="form-control" id="recipient-name"/>
+                            <input value={username} onChange={usenameLoginChange} type="text" className="form-control" id="recipient-name"/>
                         </div>
                         <div className="mb-3">
                             <label htmlFor="message-text" className="col-form-label">Password</label>
-                            <input onChange={passwordLoginChange} className="form-control" id="message-text" type="password"/>
+                            <input value={password} onChange={passwordLoginChange} className="form-control" id="message-text" type="password"/>
                         </div>
                         </form>
                     </div>
                     <div className="modal-footer">
-                        <button type="button" className="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                        <button onClick={handleLogin} type="button" className="btn btn-primary">Login</button>
+                        <button onClick={handleLoginClose} type="button" className="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button onClick={handleLogin} type="button" data-bs-dismiss="modal" className="btn btn-primary">Login</button>
                     </div>
                     </div>
                 </div>
@@ -123,25 +187,25 @@ export default function Nav(props){
                             <form>
                             <div className="mb-3">
                                 <label htmlFor="recipient-name" className="col-form-label">Username</label>
-                                <input onChange={RUNChange} type="text" className="form-control" id="recipient-name"/>
+                                <input value={regUsername} onChange={RUNChange} type="text" className="form-control" id="recipient-name"/>
                             </div>
-                            <div class="mb-3">
+                            <div className="mb-3">
                                 <label htmlFor="message-text" className="col-form-label">Password</label>
-                                <input onChange={RPChange} className="form-control" id="message-text" type="password"/>
+                                <input value={regPass} onChange={RPChange} className="form-control" id="message-text" type="password"/>
                             </div>
                             <div className="mb-3">
                                 <label htmlFor="message-text" className="col-form-label">Name</label>
-                                <input onChange={nameChange} className="form-control" id="message-text" type="text"/>
+                                <input value={name} onChange={nameChange} className="form-control" id="message-text" type="text"/>
                             </div>
                             <div className="mb-3">
                                 <label htmlFor="message-text" className="col-form-label">Email</label>
-                                <input onChange={emailChange} className="form-control" id="message-text" type="email"/>
+                                <input value={email} onChange={emailChange} className="form-control" id="message-text" type="email"/>
                             </div>
                             </form>
                         </div>
                         <div className="modal-footer">
-                            <button type="button" className="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                            <button onClick={handleRegister} type="button" className="btn btn-primary">Register</button>
+                            <button onClick={handleRegisterClose} type="button" className="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                            <button onClick={handleRegister} type="button" data-bs-dismiss="modal" className="btn btn-primary">Register</button>
                         </div>
                     </div>
                 </div>

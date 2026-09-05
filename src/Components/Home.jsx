@@ -24,7 +24,7 @@ export default function Home(props){
     return(
         <div className="container d-flex flex-column min-vh-100 ">
             <div>
-                <Nav/>
+                <Nav loggedIn={props.loggedIn} setLoggedIn={props.setLoggedIn} setToken={props.setToken}/>
             </div>
             {loading ?(
                 <div className="HomeLoadingDiv">
