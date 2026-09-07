@@ -1,5 +1,6 @@
 import { useState } from "react"
 import axios from "axios"
+import pfp from "../assets/pfp.jpg"
 
 export default function Nav(props){
     const [regUsername,setRegUsername] = useState("")
@@ -38,7 +39,10 @@ export default function Nav(props){
 
     const handleRegister = async (e)=>{
         e.preventDefault()
-        console.log(regUsername,regPass,name,email)
+        setRegUsername("");
+        setRegPass("")
+        setName("")
+        setEmail("")
         if(regUsername && regPass && name && email){
             try{
                 const response = await axios.post("https://tarmeezacademy.com/api/v1/register",{
@@ -52,11 +56,20 @@ export default function Nav(props){
                 localStorage.setItem("token",response.data.token)
                 localStorage.setItem("user",JSON.stringify(response.user))
                 setShowAlert(true)
-                setAlertType("Registered")
-
+                setAlertType("green")
+                setAlertMessage("Registered Successfully!")
+                autoCloseAlert();
             }catch(err){
-                console.log(err.response?.data)
+                setAlertType("red")
+                setAlertMessage(err.response?.data?.message)
+                setShowAlert(true)
+                autoCloseAlert();        
             }
+        }else{
+            setAlertType("red")
+            setAlertMessage("Missing data fields.")
+            setShowAlert(true)
+            autoCloseAlert();                     
         }
     }
 
@@ -73,9 +86,10 @@ export default function Nav(props){
 
     const handleLogin = async (e)=>{
         e.preventDefault()
+        setUsername("")
+        setPassword("")        
         if(username && password){
             try{
-                console.log(username,password)
                 const response = await axios.post("https://tarmeezacademy.com/api/v1/login",
                     {
                         "username": username,
@@ -87,11 +101,22 @@ export default function Nav(props){
                 props.setLoggedIn(true)
                 localStorage.setItem("user",JSON.stringify(response.data.user))
                 setShowAlert(true)
-                setAlertType("Logged in")
+                setAlertMessage("Logged in Succeessfully!")                
+                setAlertType("green")
+                autoCloseAlert();
             }catch(err){
-                console.log(err.response?.status)
-                console.log(err.response?.data?.message)
+                setAlertType("red")
+                setAlertMessage(err.response?.data?.message)
+                setShowAlert(true)
+                autoCloseAlert();
+
             }
+        }else{
+            setAlertType("red")
+            setAlertMessage("Missing data fields.")
+            setShowAlert(true)
+            autoCloseAlert();
+
         }
     }
 
@@ -102,12 +127,19 @@ export default function Nav(props){
         localStorage.setItem("token","")
         localStorage.setItem("user","")
         setShowAlert(true)
-        setAlertType("Logged out")
+        setAlertType("red")
+        setAlertMessage("Logged out Successfully")
+        autoCloseAlert();
     }
 
     const [showAlert,setShowAlert] = useState(false);
     const [alertType,setAlertType] = useState("")
-
+    const [alertMessage,setAlertMessage] = useState("")
+    const autoCloseAlert = ()=>{
+        setTimeout(()=>{
+            setShowAlert(false)
+        },5000)
+    }
     return(
         <nav id="navi" className="navbar navbar-expand-lg bg-body-tertiary">
             <div className="container-fluid">
@@ -116,34 +148,65 @@ export default function Nav(props){
                 <span className="navbar-toggler-icon"></span>
                 </button>
                 <div className="collapse navbar-collapse" id="navbarNav">
-                <ul className="navbar-nav">
-                    <li className="nav-item">
-                    <a className="nav-link active" aria-current="page" href="#">Home</a>
-                    </li>
-                    <li className="nav-item">
-                    <a className="nav-link" href="#">Profile</a>
-                    </li>
-                </ul>
-                <div className="d-flex w-100 justify-content-end">
+                    <ul className="navbar-nav">
+                        <li className="nav-item">
+                        <a className="nav-link active" aria-current="page" href="#">Home</a>
+                        </li>
+                        <li className="nav-item">
+                        <a className="nav-link" href="#">Profile</a>
+                        </li>
+                    </ul>
 
-                    {props.loggedIn ? (
-                        <button onClick={handleLogoutBtn} type="button" className="btn btn-outline-danger mx-2">Logout</button>
-                    )
-                    :
-                    (
-                        <>
-                            <button type="button" className="btn btn-outline-success mx-2" data-bs-toggle="modal" data-bs-target="#loginModal">Login</button>
-                            <button type="button" className="btn btn-outline-success" data-bs-toggle="modal" data-bs-target="#registerModal">Register</button>                        
-                        </>
-                    )}
+                    <div className="d-flex ms-auto align-items-center">
 
-                </div>
+                        {props.loggedIn && (
+                            <div className="d-flex align-items-center me-2">
+                                <img
+                                    src={pfp}
+                                    className="rounded-circle navPfp border border-2 border-dark-subtle"
+                                    alt=""
+                                />
+                                <p className="mx-2 my-0">p2n_</p>
+                            </div>
+                        )}
+
+                        {props.loggedIn ? (
+                            <button
+                                onClick={handleLogoutBtn}
+                                type="button"
+                                className="btn btn-outline-danger"
+                            >
+                                Logout
+                            </button>
+                        ) : (
+                            <>
+                                <button
+                                    type="button"
+                                    className="btn btn-outline-success mx-2"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#loginModal"
+                                >
+                                    Login
+                                </button>
+
+                                <button
+                                    type="button"
+                                    className="btn btn-outline-success"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#registerModal"
+                                >
+                                    Register
+                                </button>
+                            </>
+                        )}
+
+                    </div>
                 </div>
             </div>
 
         {showAlert &&
-            (<div id="alertSucc" className={alertType == "Logged out" ? "alert-danger alert alert-dismissible" :"alert-success alert alert-dismissible"} role="alert" >
-                <div>{alertType} Successfully</div>
+            (<div id="alertSucc" className={alertType == "red" ? "alert-danger alert alert-dismissible" :"alert-success alert alert-dismissible"} role="alert" >
+                <div>{alertMessage}</div>
                 <button type="button" className="btn-close" aria-label="Close" onClick={() => setShowAlert(false)} >
                 </button>
             </div>)}                    
@@ -174,7 +237,6 @@ export default function Nav(props){
                     </div>
                 </div>
             </div>
-
 
             <div className="modal fade" id="registerModal" tabIndex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
                 <div className="modal-dialog">
